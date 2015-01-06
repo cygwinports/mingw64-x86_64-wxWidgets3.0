@@ -1,0 +1,81 @@
+CROSS_HOST="x86_64-w64-mingw32"
+WX_TOOLKIT="msw"
+inherit cross
+
+NAME="mingw64-x86_64-wxWidgets3.0"
+VERSION=3.0.2.0
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="wxWidgets C++ application framework for Win64 toolchain"
+DESCRIPTION="This package does NOT contain cygwin binaries.  Instead, it
+contains msvcrt-linked binaries (aka 'mingw').  It is for use with the
+mingw64-x86_64-gcc cross compiler, and installs into the
+/usr/x86_64-w64-mingw32/sys-root/mingw/{lib,include} directories."
+HOMEPAGE="http://wxwidgets.org/"
+SRC_URI="mirror://sourceforge/wxpython/wxPython-src-${VERSION}.tar.bz2"
+SRC_DIR="wxPython-src-${VERSION}"
+PATCH_URI="mirror://portage/x11-libs/wxGTK/files/wxGTK-3.0.0.0-collision.patch"
+
+DIFF_EXCLUDES="configure swigver.h wx.pth *_wrap.cpp"
+
+MAKEOPTS+=" -j1"
+
+src_compile() {
+	mkdir -p ${B}/shared
+	cd ${B}/shared
+	cygconf \
+		--enable-optimise \
+		--enable-shared \
+		--enable-unicode \
+		--disable-rpath \
+		--disable-sdltest \
+		--with-expat \
+		--with-${WX_TOOLKIT} \
+		--with-libjpeg \
+		--with-libpng \
+		--with-libtiff \
+		--with-opengl \
+		--with-zlib
+	cygmake
+
+	mkdir -p ${B}/static
+	cd ${B}/static
+	cygconf \
+		--enable-optimise \
+		--disable-shared \
+		--enable-unicode \
+		--disable-rpath \
+		--disable-sdltest \
+		--with-expat \
+		--with-${WX_TOOLKIT} \
+		--with-libjpeg \
+		--with-libpng \
+		--with-libtiff \
+		--with-opengl \
+		--with-zlib
+	cygmake
+}
+
+src_install() {
+	cd ${B}/static
+	cyginstall
+	cd ${B}/shared
+	cyginstall
+
+	cp -f ${B}/{shared,static}/lib/lib* ${D}${CROSS_LIBDIR}
+	cp -fr ${B}/{shared,static}/lib/wx/ ${D}${CROSS_LIBDIR}
+	rm -f ${D}${CROSS_LIBDIR}/wx/config/inplace-*
+
+	mv ${D}${CROSS_LIBDIR}/*.dll ${D}${CROSS_BINDIR}
+	rm ${D}${CROSS_BINDIR}/wxrc*
+
+	dosym ../lib/wx/config/${CROSS_HOST}-${WX_TOOLKIT}-unicode-${VERSION:0:3} ${CROSS_BINDIR}/wx-config-${VERSION:0:3}
+	dodir /usr/lib/wx/config
+	dosym ../../../${CROSS_LIBDIR#/usr/}/wx/config/* /usr/lib/wx/config/
+
+	insinto ${CROSS_DATADIR}/aclocal
+	newins ${S}/wxwin.m4 wxwin-${VERSION:0:3}.m4
+
+	cd ${S}/docs
+	dodoc changes.txt gpl.txt lgpl.txt licendoc.txt preamble.txt todo.txt
+}
