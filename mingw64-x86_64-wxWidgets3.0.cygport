@@ -4,7 +4,7 @@ inherit cross
 
 NAME="mingw64-x86_64-wxWidgets3.0"
 VERSION=3.0.2.0
-RELEASE=1
+RELEASE=2
 CATEGORY="Devel"
 SUMMARY="wxWidgets C++ application framework for Win64 toolchain"
 DESCRIPTION="This package does NOT contain cygwin binaries.  Instead, it
