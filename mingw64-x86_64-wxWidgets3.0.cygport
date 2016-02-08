@@ -4,7 +4,7 @@ inherit cross
 
 NAME="mingw64-x86_64-wxWidgets3.0"
 VERSION=3.0.2.0
-RELEASE=2
+RELEASE=3
 CATEGORY="Devel"
 SUMMARY="wxWidgets C++ application framework for Win64 toolchain"
 DESCRIPTION="This package does NOT contain cygwin binaries.  Instead, it
@@ -14,13 +14,24 @@ mingw64-x86_64-gcc cross compiler, and installs into the
 HOMEPAGE="http://wxwidgets.org/"
 SRC_URI="mirror://sourceforge/wxpython/wxPython-src-${VERSION}.tar.bz2"
 SRC_DIR="wxPython-src-${VERSION}"
-PATCH_URI="mirror://portage/x11-libs/wxGTK/files/wxGTK-3.0.0.0-collision.patch"
+PATCH_URI="
+	http://pkgs.fedoraproject.org/cgit/rpms/wxGTK3.git/plain/wxGTK3-3.0.2-abicheck.patch
+	mirror://portage/x11-libs/wxGTK/files/wxGTK-3.0.0.0-collision.patch
+"
 
 DIFF_EXCLUDES="configure swigver.h wx.pth *_wrap.cpp"
 
 MAKEOPTS+=" -j1"
 
 src_compile() {
+	cd ${S}
+	NO_ACLOCAL=1 NO_LIBTOOLIZE=1 NO_AUTOHEADER=1 NO_AUTOMAKE=1 \
+	cygautoreconf
+
+	cd ${S}/locale
+	rm -f *.mo
+	cygmake allmo
+
 	mkdir -p ${B}/shared
 	cd ${B}/shared
 	cygconf \
