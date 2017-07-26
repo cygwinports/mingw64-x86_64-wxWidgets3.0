@@ -3,8 +3,8 @@ WX_TOOLKIT="msw"
 inherit cross
 
 NAME="mingw64-x86_64-wxWidgets3.0"
-VERSION=3.0.2.0
-RELEASE=3
+VERSION=3.0.3
+RELEASE=1
 CATEGORY="Devel"
 SUMMARY="wxWidgets C++ application framework for Win64 toolchain"
 DESCRIPTION="This package does NOT contain cygwin binaries.  Instead, it
@@ -12,16 +12,13 @@ contains msvcrt-linked binaries (aka 'mingw').  It is for use with the
 mingw64-x86_64-gcc cross compiler, and installs into the
 /usr/x86_64-w64-mingw32/sys-root/mingw/{lib,include} directories."
 HOMEPAGE="http://wxwidgets.org/"
-SRC_URI="mirror://sourceforge/wxpython/wxPython-src-${VERSION}.tar.bz2"
-SRC_DIR="wxPython-src-${VERSION}"
+SRC_URI="https://github.com/wxWidgets/wxWidgets/releases/download/v${VERSION}/wxWidgets-${VERSION}.tar.bz2"
+SRC_DIR="wxWidgets-${VERSION}"
 PATCH_URI="
-	http://pkgs.fedoraproject.org/cgit/rpms/wxGTK3.git/plain/wxGTK3-3.0.2-abicheck.patch
+	http://pkgs.fedoraproject.org/cgit/rpms/wxGTK3.git/plain/wxGTK3-3.0.3-abicheck.patch
 	mirror://portage/x11-libs/wxGTK/files/wxGTK-3.0.0.0-collision.patch
+	3.0.3-autoreconf.patch
 "
-
-DIFF_EXCLUDES="configure swigver.h wx.pth *_wrap.cpp"
-
-MAKEOPTS+=" -j1"
 
 src_compile() {
 	cd ${S}
@@ -30,7 +27,7 @@ src_compile() {
 
 	cd ${S}/locale
 	rm -f *.mo
-	cygmake allmo
+	cygmake allmo -j1
 
 	mkdir -p ${B}/shared
 	cd ${B}/shared
@@ -69,9 +66,9 @@ src_compile() {
 
 src_install() {
 	cd ${B}/static
-	cyginstall
+	cyginstall -j1
 	cd ${B}/shared
-	cyginstall
+	cyginstall -j1
 
 	cp -f ${B}/{shared,static}/lib/lib* ${D}${CROSS_LIBDIR}
 	cp -fr ${B}/{shared,static}/lib/wx/ ${D}${CROSS_LIBDIR}
